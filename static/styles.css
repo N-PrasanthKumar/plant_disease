@@ -1,0 +1,70 @@
+/* styles.css */
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #d9e9cd;
+    margin: 0;
+    padding: 0;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    margin: 10px;
+    border-radius: 5px;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+#uploadDiv, #webcamDiv {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #bfc5bb;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#uploadDiv form {
+    margin-bottom: 20px;
+}
+
+#error-message {
+    color: red;
+}
+
+#prediction-div {
+    margin-top: 20px;
+}
+
+#prediction-div img {
+    display: block;
+    margin: 0 auto;
+    border-radius: 5px;
+}
+
+#prediction-div h2 {
+    text-align: center;
+    margin-top: 10px;
+}
+
+@media screen and (max-width: 768px) {
+    #uploadDiv, #webcamDiv {
+        padding: 10px;
+    }
+
+    button {
+        font-size: 14px;
+        padding: 8px 16px;
+    }
+
+    #prediction-div img {
+        height: auto;
+        width: 100%;
+    }
+}

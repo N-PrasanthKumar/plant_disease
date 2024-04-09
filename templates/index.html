@@ -1,0 +1,137 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Plant Disease Prediction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <button onclick="showUploadDiv()">Upload Image</button>
+    <button onclick="showWebcamDiv()">Capture from Webcam</button>
+
+    <div id="uploadDiv" >
+        <form id="uploadForm" action="/submit" method="post" enctype="multipart/form-data" onsubmit="return validateUploadForm()">
+            <input type="file" name="image" id="image">
+            <button type="submit">Submit</button>
+            <p id="upload-error-message"></p>
+        </form>
+        {% if prediction %}
+            <div>
+                <img src="{{ img_path }}" alt="Uploaded Image" height="400px" width="400px">
+                <h2>Your Prediction: <i>{{ prediction }}</i></h2>
+            </div>
+        {% endif %}
+    </div>
+
+    <div id="webcamDiv" style="display: none;">
+        <div>
+            <video id="video" width="640" height="480" autoplay></video>
+            <button id="snap">Take Photo</button>
+            <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+        </div>
+        <p id="webcam-error-message"></p>
+        <div id="prediction-div" style="display: none;">
+            <img id="captured-image" src="" alt="Captured Image" height="400px" width="400px">
+            <h2>Your Prediction: <span id="prediction-text"></span></h2>
+        </div>
+    </div>
+    
+    <script>
+        let stream;
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const snapButton = document.getElementById('snap');
+        const capturedImage = document.getElementById('captured-image');
+        const predictionText = document.getElementById('prediction-text');
+        
+        function showUploadDiv() {
+            document.getElementById("uploadDiv").style.display = "block";
+            document.getElementById("webcamDiv").style.display = "none";
+            stopWebcam(); // Stop webcam if it's running
+        }
+
+        function showWebcamDiv() {
+            document.getElementById("uploadDiv").style.display = "none";
+            document.getElementById("webcamDiv").style.display = "block";
+            startWebcam(); // Start webcam
+        }
+
+        function validateUploadForm() {
+            var fileInput = document.getElementById('image');
+            var errorMessage = document.getElementById('upload-error-message');
+    
+            if (fileInput.files.length === 0) {
+                errorMessage.innerHTML = 'Please select an image.';
+                return false;
+            }
+            errorMessage.innerHTML = '';
+            return true;
+        }
+
+        // Function to start webcam
+        function startWebcam() {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(s => {
+                    stream = s;
+                    video.srcObject = stream;
+                })
+                .catch(error => {
+                    console.error('Error accessing the webcam:', error);
+                });
+        }
+
+        // Function to stop webcam
+        function stopWebcam() {
+            if (stream) {
+                stream.getTracks().forEach(track => {
+                    track.stop();
+                });
+            }
+        }
+
+        // Function to take a photo and save it to the server
+        function takePhoto() {
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+            // Convert canvas to base64 image data
+            const imageData = canvas.toDataURL('image/png');
+    
+            // Set captured image source
+            capturedImage.src = imageData;
+    
+            // Send image data to the server
+            fetch('/save_photo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ image: imageData }),
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log('Photo saved successfully.');
+                    return response.json();
+                } else {
+                    console.error('Failed to save photo.');
+                }
+            })
+            .then(data => {
+                if (data && data.success) {
+                    console.log('Prediction:', data.prediction);
+                    predictionText.textContent = data.prediction;
+                    document.getElementById('prediction-div').style.display = 'block';
+                } else {
+                    console.error('Prediction failed:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error saving photo:', error);
+            });
+        }
+    
+        // Event listener for snapButton
+        snapButton.addEventListener('click', takePhoto);
+    </script>
+</body>
+</html>
